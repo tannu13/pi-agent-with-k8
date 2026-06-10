@@ -1,32 +1,31 @@
-import { CoreV1Api, KubeConfig } from "@kubernetes/client-node";
+import {
+  CoordinationV1Api,
+  CoreV1Api,
+  KubeConfig,
+} from "@kubernetes/client-node";
 import express, {
   type NextFunction,
   type Request,
   type Response,
 } from "express";
-import { PossiblePhases } from "./types";
+import { createLeaseService } from "./services/leaseService";
+import { createPodService } from "./services/podService";
+
+const podService = createPodService();
+
+const leaseService = createLeaseService(podService);
+await leaseService.init();
 
 const app = express();
 
 app.get("/health", async (_req: Request, res: Response) => {
-  const kc = new KubeConfig();
-  kc.loadFromDefault();
-
-  const k8sApi = kc.makeApiClient(CoreV1Api);
-
   let kubernetesConnected = false;
   let healthyPodsCount = 0;
+
   try {
-    const pods = await k8sApi.listNamespacedPod({
-      namespace: "default",
-      labelSelector: "app=sandbox-runner",
-    });
+    const { totalHealthyCount } = await podService.getPods();
+    healthyPodsCount = totalHealthyCount;
     kubernetesConnected = true;
-    for (const pod of pods.items) {
-      if (pod.status?.phase === PossiblePhases.enum.Running) {
-        healthyPodsCount++;
-      }
-    }
   } catch (err) {
     console.error("Error fetching pods:", err);
   }
@@ -35,6 +34,17 @@ app.get("/health", async (_req: Request, res: Response) => {
     ok: kubernetesConnected,
     kubernetes: kubernetesConnected ? "connected" : "disconnected",
     sandboxPodsReady: healthyPodsCount,
+  });
+});
+
+app.get("/pods", async (_req: Request, res: Response) => {
+  const kc = new KubeConfig();
+  kc.loadFromDefault();
+
+  const coordApi = kc.makeApiClient(CoordinationV1Api);
+  const leases = await coordApi.listNamespacedLease({
+    namespace: "default",
+    labelSelector: "app=sandbox-runner",
   });
 });
 

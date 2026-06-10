@@ -7,3 +7,5 @@ export const PossiblePhases = z.enum([
   "Failed",
   "Unknown",
 ]);
+
+export type TPossiblePhases = z.infer<typeof PossiblePhases>;

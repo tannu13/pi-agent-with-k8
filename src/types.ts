@@ -1,11 +1,15 @@
-import z from "zod";
+export type TLeaseInfo = {
+  status: "free" | "leased";
+  holderIdentity?: string;
+  expiresAt?: string;
+};
+export type TPodsresponse = {
+  name: string;
+  ready: boolean;
+  lease: TLeaseInfo;
+}[];
 
-export const PossiblePhases = z.enum([
-  "Pending",
-  "Running",
-  "Succeeded",
-  "Failed",
-  "Unknown",
-]);
-
-export type TPossiblePhases = z.infer<typeof PossiblePhases>;
+export type TPodInfo = {
+  name: string;
+  ready: boolean;
+};

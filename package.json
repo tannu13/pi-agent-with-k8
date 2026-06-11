@@ -4,11 +4,16 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "npx tsx watch src/index.ts"
+    "dev": "npx tsx watch src/index.ts",
+    "test": "vitest run --exclude **/*.integration.test.ts",
+    "test:integration": "vitest run \"./src/tests/integration.test.ts\""
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/express": "^5.0.6"
+    "@types/express": "^5.0.6",
+    "@types/supertest": "^7.2.0",
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.8"
   },
   "peerDependencies": {
     "typescript": "^5"

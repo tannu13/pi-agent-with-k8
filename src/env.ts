@@ -8,7 +8,15 @@ const EnvSchema = z.object({
   APP_STAGE: z.enum(["dev", "prod"]).default("dev"),
   K8_NAMESPACE: z.string().default("default"),
   K8_LABEL: z.string().default("sandbox-runner"),
+  K8_CONTAINER: z.string().default("runner"),
+  SANDBOX_COUNT: z.coerce.number().int().positive().default(8),
+  SANDBOX_WORKDIR: z.string().default("/workspace"),
   LEASE_DURATION_SECONDS: z.coerce.number().positive().default(45),
+  QUEUE_MAX_WAIT_MS: z.coerce.number().positive().default(15000),
+  TOOL_TIMEOUT_MS: z.coerce.number().positive().default(30000),
+  SERVICE_INSTANCE_ID: z.string().default(`api-${process.pid}`),
+  PI_PROVIDER: z.string().default("google"),
+  PI_MODEL: z.string().default("gemma-4-26b-a4b-it"),
 });
 
 type Env = z.infer<typeof EnvSchema>;

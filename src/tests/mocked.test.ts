@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import supertest from "supertest";
 import { CoreV1Api } from "@kubernetes/client-node";
-import app from "../server";
+import { getHealthPayload } from "../server";
+import { createK8Service } from "../services/k8Service";
 
 describe("GET /health - Unit Tests (Mocked)", () => {
   // Create a handle to spy on the prototype method directly
@@ -31,9 +31,9 @@ describe("GET /health - Unit Tests (Mocked)", () => {
       items: mockPods,
     });
 
-    const response = await supertest(app).get("/health").expect(200);
+    const response = await getHealthPayload(createK8Service());
 
-    expect(response.body).toEqual({
+    expect(response).toEqual({
       ok: true,
       kubernetes: "connected",
       sandboxPodsReady: 8,
@@ -44,12 +44,9 @@ describe("GET /health - Unit Tests (Mocked)", () => {
     // Mock an API crash
     listNamespacedPodSpy.mockRejectedValue(new Error("Connection refused"));
 
-    const response = await supertest(app).get("/health").expect(503);
+    await expect(getHealthPayload(createK8Service())).rejects.toThrow(
+      "Connection refused",
+    );
 
-    expect(response.body).toEqual({
-      ok: false,
-      kubernetes: "disconnected",
-      sandboxPodsReady: 0,
-    });
   });
 });

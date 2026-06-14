@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pi-agent-api
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pi-agent-api
+  template:
+    metadata:
+      labels:
+        app: pi-agent-api
+    spec:
+      serviceAccountName: pi-agent-api
+      containers:
+        - name: api
+          image: pi-agent-with-k8:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: pi-agent-api-env
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pi-agent-api
+  namespace: default
+spec:
+  selector:
+    app: pi-agent-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
